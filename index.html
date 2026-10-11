@@ -1,83 +1,292 @@
-‎<!DOCTYPE html>
-‎<html>
-‎<head>
-‎<meta charset="UTF-8">
-‎<meta name="viewport" content="width=device-width, initial-scale=1.0">
-‎<title>UniVox - Live</title>
-‎<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-‎<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-‎<style>
-‎*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-‎body{background:#0a0a0a;color:white;display:flex;flex-direction:column;height:100vh}
-‎header{background:#111;padding:16px;text-align:center;border-bottom:2px solid #00ff88}
-‎#chatBox{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px}
-‎.msg{padding:10px 14px;border-radius:18px;max-width:80%}
-‎.me{align-self:flex-end;background:#00ff88;color:#000}
-‎.other{align-self:flex-start;background:#222}
-‎#inputArea{display:flex;padding:12px;background:#111;gap:10px}
-‎#msgInput{flex:1;padding:13px;border-radius:25px;border:none;background:#222;color:white}
-‎#sendBtn{padding:13px 22px;border-radius:25px;border:none;background:#00ff88;font-weight:bold}
-‎#nameBox{height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center}
-‎#nameInput{padding:14px;border-radius:25px;border:none;width:85%;max-width:320px;margin:15px;background:#222;color:white;text-align:center}
-‎#joinBtn{padding:12px 30px;border-radius:25px;border:none;background:#00ff88;font-weight:800}
-‎</style>
-‎</head>
-‎<body>
-‎<div id="nameBox">
-‎<h2>UniVox 🔴 Live</h2>
-‎<input id="nameInput" placeholder="Jaise: Hamza">
-‎<button id="joinBtn">Join Live Chat</button>
-‎</div>
-‎<header id="header" style="display:none"><h1>UniVox 🔴 Live</h1><small id="status">Connected ✅</small></header>
-‎<div id="chatBox" style="display:none"></div>
-‎<div id="inputArea" style="display:none">
-‎<input id="msgInput" placeholder="Message likho...">
-‎<button id="sendBtn">Send</button>
-‎</div>
-‎<script>
-‎const firebaseConfig = {
-‎  apiKey: "AIzaSyC_7-mIBNUIJ3X-lylAiUrUo",
-‎  authDomain: "univox-fb833.firebaseapp.com",
-‎  databaseURL: "https://univox-fb833-default-rtdb.firebaseio.com",
-‎  projectId: "univox-fb833",
-‎  storageBucket: "univox-fb833.firebasestorage.app",
-‎  messagingSenderId: "45229894681",
-‎  appId: "1:45229894681:web:782fb63b8a9b4b8a420e88",
-‎  measurementId: "G-XGNP2LDZW7"
-‎};
-‎firebase.initializeApp(firebaseConfig);
-‎const db = firebase.database();
-‎const messagesRef = db.ref("messages");
-‎let myName = "";
-‎function join(){
-‎  const n = document.getElementById("nameInput").value.trim();
-‎  if(!n) return alert("Naam likho!");
-‎  myName = n;
-‎  document.getElementById("nameBox").style.display="none";
-‎  document.getElementById("header").style.display="block";
-‎  document.getElementById("chatBox").style.display="flex";
-‎  document.getElementById("inputArea").style.display="flex";
-‎  document.getElementById("status").innerText = "Live ✅ - " + myName;
-‎  messagesRef.limitToLast(100).on("child_added", snap=>{
-‎    const d = snap.val();
-‎    const div = document.createElement("div");
-‎    div.className = "msg " + (d.name===myName ? "me" : "other");
-‎    div.innerHTML = `<small>${d.name}</small>${d.text}`;
-‎    document.getElementById("chatBox").appendChild(div);
-‎    document.getElementById("chatBox").scrollTop = document.getElementById("chatBox").scrollHeight;
-‎  });
-‎}
-‎document.getElementById("joinBtn").onclick = join;
-‎document.getElementById("nameInput").addEventListener("keypress", e=>{ if(e.key==="Enter") join(); });
-‎function send(){
-‎  const inp = document.getElementById("msgInput");
-‎  const text = inp.value.trim();
-‎  if(!text) return;
-‎  messagesRef.push({ name: myName, text: text, time: Date.now() });
-‎  inp.value="";
-‎}
-‎document.getElementById("sendBtn").onclick = send;
-‎document.getElementById("msgInput").addEventListener("keypress", e=>{ if(e.key==="Enter") send(); });
-‎</script>
-‎</body>
-‎</html>
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>UniVox - Live</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+html,body{height:100%}
+body{background:#0a0a0a;color:#fff;display:flex;flex-direction:column;height:100dvh}
+.hidden{display:none!important}
+header{background:#111;padding:12px 16px;border-bottom:2px solid #00ff88;display:flex;align-items:center;justify-content:space-between;gap:10px}
+header h1{font-size:18px}
+#status{color:#9a9a9a;font-size:12px;display:block}
+#adminBar{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#adminBar button{background:#222;color:#00ff88;border:1px solid #00ff88;border-radius:14px;padding:6px 10px;font-size:12px}
+#pinned{background:#1c2b24;border-bottom:1px solid #00ff88;padding:8px 14px;font-size:14px}
+#chatBox{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px}
+.msg{padding:8px 14px 6px;border-radius:18px;max-width:82%;overflow-wrap:anywhere;position:relative}
+.me{align-self:flex-end;background:#00ff88;color:#000}
+.other{align-self:flex-start;background:#222}
+.msg .who{display:block;font-size:12px;font-weight:700;margin-bottom:2px;opacity:.8}
+.other .who{color:#00ff88}
+.msg .who.clickable{cursor:pointer;text-decoration:underline}
+.msg .body{white-space:pre-wrap}
+.msg .meta{display:flex;justify-content:flex-end;gap:10px;font-size:11px;opacity:.65;margin-top:3px}
+.msg .del{cursor:pointer;background:none;border:none;color:inherit;font-size:11px;text-decoration:underline}
+.badge{background:#ffd54a;color:#000;border-radius:8px;padding:0 6px;font-size:10px;margin-left:6px}
+#inputArea{display:flex;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));background:#111;gap:10px}
+#msgInput{flex:1;padding:13px;border-radius:25px;border:none;background:#222;color:#fff;font-size:16px}
+#sendBtn{padding:13px 22px;border-radius:25px;border:none;background:#00ff88;font-weight:bold}
+#sendBtn:disabled,#msgInput:disabled{opacity:.4}
+#nameBox{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;padding:20px}
+#nameBox input,#loginForm input{padding:14px;border-radius:25px;border:none;width:85%;max-width:320px;margin:6px;background:#222;color:#fff;text-align:center;font-size:16px}
+#joinBtn,#loginBtn{padding:12px 30px;border-radius:25px;border:none;background:#00ff88;font-weight:800;margin-top:6px}
+#adminLink{margin-top:18px;background:none;border:none;color:#777;font-size:13px;text-decoration:underline}
+#loginForm{display:flex;flex-direction:column;align-items:center;width:100%}
+#err{color:#ff6b6b;font-size:13px;min-height:18px;text-align:center;max-width:320px}
+#bannedNote{background:#3a1515;color:#ffb3b3;text-align:center;padding:10px;font-size:14px}
+#banList{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:20px}
+#banList .card{background:#161616;border:1px solid #00ff88;border-radius:16px;padding:16px;width:100%;max-width:360px;max-height:80dvh;overflow:auto}
+#banList .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #2a2a2a;gap:8px;overflow-wrap:anywhere}
+#banList button{background:#222;color:#00ff88;border:1px solid #00ff88;border-radius:12px;padding:5px 10px}
+</style>
+</head>
+<body>
+
+<div id="nameBox">
+  <h2>UniVox 🔴 Live</h2>
+  <div id="guestForm" style="display:flex;flex-direction:column;align-items:center;width:100%">
+    <input id="nameInput" maxlength="30" placeholder="اپنا نام لکھیں، جیسے: Hamza">
+    <button id="joinBtn">Join Live Chat</button>
+    <button id="adminLink">Admin login</button>
+  </div>
+  <div id="loginForm" class="hidden">
+    <input id="adminEmail" type="email" placeholder="Admin email" autocomplete="username">
+    <input id="adminPass" type="password" placeholder="Password" autocomplete="current-password">
+    <button id="loginBtn">Login as admin</button>
+    <button id="backLink" style="margin-top:14px;background:none;border:none;color:#777;font-size:13px;text-decoration:underline">Back</button>
+  </div>
+  <div id="err"></div>
+</div>
+
+<header id="header" class="hidden">
+  <div><h1>UniVox 🔴 Live</h1><small id="status">Connecting…</small></div>
+  <div id="adminBar" class="hidden">
+    <button id="pinBtn">Pin</button>
+    <button id="bansBtn">Bans</button>
+    <button id="clearBtn">Clear chat</button>
+  </div>
+</header>
+<div id="pinned" class="hidden"></div>
+<div id="bannedNote" class="hidden">آپ کو اس چیٹ سے بلاک کر دیا گیا ہے۔</div>
+<div id="chatBox" class="hidden"></div>
+<div id="inputArea" class="hidden">
+  <input id="msgInput" maxlength="500" placeholder="Message likho...">
+  <button id="sendBtn">Send</button>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC_7-mIBNUIJ3X-lylAiUrUo",
+  authDomain: "univox-fb833.firebaseapp.com",
+  databaseURL: "https://univox-fb833-default-rtdb.firebaseio.com",
+  projectId: "univox-fb833",
+  storageBucket: "univox-fb833.firebasestorage.app",
+  messagingSenderId: "45229894681",
+  appId: "1:45229894681:web:782fb63b8a9b4b8a420e88",
+  measurementId: "G-XGNP2LDZW7"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+const $ = id => document.getElementById(id);
+
+let myName = "", myUid = "", isAdmin = false, isBanned = false, started = false;
+const chatBox = $("chatBox");
+
+function showErr(m){ $("err").textContent = m || ""; }
+
+$("adminLink").onclick = () => { $("guestForm").classList.add("hidden"); $("loginForm").classList.remove("hidden"); showErr(""); };
+$("backLink").onclick  = () => { $("loginForm").classList.add("hidden"); $("guestForm").classList.remove("hidden"); showErr(""); };
+
+try { $("nameInput").value = localStorage.getItem("univox_name") || ""; } catch(e){}
+
+$("joinBtn").onclick = async () => {
+  const n = $("nameInput").value.trim();
+  if(!n) return showErr("نام لکھیں!");
+  myName = n.slice(0,30);
+  try { localStorage.setItem("univox_name", myName); } catch(e){}
+  try {
+    if(!auth.currentUser) await auth.signInAnonymously();
+    await enter();
+  } catch(e){ showErr("Login failed: " + e.message); }
+};
+$("nameInput").addEventListener("keydown", e => { if(e.key==="Enter") $("joinBtn").click(); });
+
+$("loginBtn").onclick = async () => {
+  try {
+    const cred = await auth.signInWithEmailAndPassword($("adminEmail").value.trim(), $("adminPass").value);
+    const snap = await db.ref("admins/" + cred.user.uid).get();
+    if(snap.val() !== true){
+      await auth.signOut();
+      return showErr("یہ اکاؤنٹ ایڈمن نہیں ہے۔ UID کو Firebase میں admins کے نیچے true کریں۔");
+    }
+    myName = "Admin 👑";
+    await enter();
+  } catch(e){ showErr("Login failed: " + e.message); }
+};
+$("adminPass").addEventListener("keydown", e => { if(e.key==="Enter") $("loginBtn").click(); });
+
+async function enter(){
+  myUid = auth.currentUser.uid;
+  const a = await db.ref("admins/" + myUid).get();
+  isAdmin = a.val() === true;
+  if(isAdmin && myName === "") myName = "Admin 👑";
+
+  $("nameBox").classList.add("hidden");
+  $("header").classList.remove("hidden");
+  chatBox.classList.remove("hidden");
+  $("inputArea").classList.remove("hidden");
+  $("status").textContent = "Live ✅ - " + myName;
+  if(isAdmin){ $("adminBar").classList.remove("hidden"); $("msgInput").removeAttribute("maxlength"); }
+
+  if(started) return;
+  started = true;
+  listen();
+}
+
+function setBanned(b){
+  isBanned = b;
+  $("bannedNote").classList.toggle("hidden", !b);
+  $("msgInput").disabled = b; $("sendBtn").disabled = b;
+}
+
+function fmt(t){
+  if(!t) return "";
+  return new Date(t).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+}
+
+function renderMsg(key, d){
+  const mine = d.uid === myUid;
+  const div = document.createElement("div");
+  div.className = "msg " + (mine ? "me" : "other");
+  div.dataset.key = key;
+
+  const who = document.createElement("span");
+  who.className = "who";
+  who.textContent = d.name;
+  if(d.admin){ const b = document.createElement("span"); b.className="badge"; b.textContent="ADMIN"; who.appendChild(b); }
+  if(isAdmin && !mine){
+    who.classList.add("clickable");
+    who.title = "Ban this user";
+    who.onclick = () => banUser(d.uid, d.name);
+  }
+
+  const body = document.createElement("span");
+  body.className = "body";
+  body.textContent = d.text;
+
+  const meta = document.createElement("span");
+  meta.className = "meta";
+  const time = document.createElement("span");
+  time.textContent = fmt(d.time);
+  meta.appendChild(time);
+  if(isAdmin || mine){
+    const del = document.createElement("button");
+    del.className = "del"; del.textContent = "Delete";
+    del.onclick = () => db.ref("messages/" + key).remove().catch(e => alert(e.message));
+    meta.appendChild(del);
+  }
+
+  div.append(who, body, meta);
+  return div;
+}
+
+function listen(){
+  const ref = db.ref("messages").orderByChild("time").limitToLast(200);
+  ref.on("child_added", snap => {
+    const nearBottom = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 120;
+    chatBox.appendChild(renderMsg(snap.key, snap.val()));
+    if(nearBottom || snap.val().uid === myUid) chatBox.scrollTop = chatBox.scrollHeight;
+  });
+  db.ref("messages").on("child_removed", snap => {
+    const el = chatBox.querySelector('[data-key="' + snap.key + '"]');
+    if(el) el.remove();
+  });
+
+  db.ref("bans/" + myUid).on("value", s => setBanned(s.exists()));
+
+  db.ref("announcement").on("value", s => {
+    const v = s.val();
+    const p = $("pinned");
+    if(v && v.text){ p.textContent = "📌 " + v.text; p.classList.remove("hidden"); }
+    else p.classList.add("hidden");
+  });
+
+  db.ref(".info/connected").on("value", s => {
+    $("status").textContent = (s.val() ? "Live ✅ - " : "Reconnecting… - ") + myName;
+  });
+}
+
+function send(){
+  const inp = $("msgInput");
+  const text = inp.value.trim();
+  if(!text || isBanned) return;
+  const msg = { uid: myUid, name: myName, text: text, time: firebase.database.ServerValue.TIMESTAMP };
+  if(isAdmin) msg.admin = true;
+  db.ref("messages").push(msg).catch(e => alert("Send failed: " + e.message));
+  inp.value = "";
+}
+$("sendBtn").onclick = send;
+$("msgInput").addEventListener("keydown", e => { if(e.key==="Enter") send(); });
+
+function banUser(uid, name){
+  if(!isAdmin || !uid) return;
+  if(!confirm("Ban " + name + "?")) return;
+  db.ref("bans/" + uid).set({ name: name, time: firebase.database.ServerValue.TIMESTAMP }).catch(e => alert(e.message));
+}
+
+$("pinBtn").onclick = () => {
+  const t = prompt("Pinned announcement (خالی چھوڑیں تو ہٹ جائے گا):");
+  if(t === null) return;
+  const r = db.ref("announcement");
+  (t.trim() ? r.set({ text: t.trim(), time: firebase.database.ServerValue.TIMESTAMP }) : r.remove()).catch(e => alert(e.message));
+};
+
+$("clearBtn").onclick = () => {
+  if(!confirm("پوری چیٹ ہمیشہ کے لیے مٹا دیں؟")) return;
+  db.ref("messages").remove().catch(e => alert(e.message));
+};
+
+$("bansBtn").onclick = async () => {
+  const snap = await db.ref("bans").get();
+  const wrap = document.createElement("div");
+  wrap.id = "banList";
+  const card = document.createElement("div");
+  card.className = "card";
+  const h = document.createElement("h3");
+  h.textContent = "Banned users";
+  h.style.marginBottom = "8px";
+  card.appendChild(h);
+  let count = 0;
+  snap.forEach(c => {
+    count++;
+    const row = document.createElement("div"); row.className = "row";
+    const nm = document.createElement("span"); nm.textContent = c.val().name || c.key;
+    const b = document.createElement("button"); b.textContent = "Unban";
+    b.onclick = () => db.ref("bans/" + c.key).remove().then(() => row.remove()).catch(e => alert(e.message));
+    row.append(nm, b); card.appendChild(row);
+  });
+  if(!count){ const p = document.createElement("p"); p.textContent = "کوئی بلاک نہیں۔"; card.appendChild(p); }
+  const close = document.createElement("button");
+  close.textContent = "Close"; close.style.marginTop = "12px";
+  close.onclick = () => wrap.remove();
+  card.appendChild(close);
+  wrap.appendChild(card);
+  document.body.appendChild(wrap);
+};
+
+auth.onAuthStateChanged(async u => {
+  if(u && !u.isAnonymous && !started){
+    const s = await db.ref("admins/" + u.uid).get();
+    if(s.val() === true){ myName = "Admin 👑"; enter(); }
+  }
+});
+</script>
+</body>
+</html>
