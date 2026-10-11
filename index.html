@@ -65,14 +65,4 @@ body{background:#080808;color:#fff;height:100vh;display:flex;flex-direction:colu
 </div>
 </div>
 <script>
-function toggleChat(){document.getElementById('sidebar').classList.toggle('hidden');}
-function toggleRules(){document.getElementById('rulesBox').classList.toggle('collapsed');}
-function sendMsg(){
-let inp=document.getElementById('msgInput'); if(!inp.value.trim()) return;
-let box=document.getElementById('messages'); let d=document.createElement('div'); d.className='msg';
-d.innerHTML='<b style=color:#ffcc00>You:</b> '+inp.value;
-box.appendChild(d); inp.value=''; box.scrollTop=box.scrollHeight;
-}
-</script>
-</body>
-</html>
+function toggleChat(){document.getElementById('sidebar
